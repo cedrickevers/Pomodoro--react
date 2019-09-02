@@ -5,8 +5,12 @@ const Header = () => <h1>Pomodoro</h1>
 
 const SetTimer = ({ type }) =>(
     <div>
-        <div id={`${type}-label`}> {`${type} length`} </div>
+        <div id={`${type}-label`}> {`${type} length`} </div>`
+    <button id={`${type}-decrement`}>test button</button> 
+    <button id={`${type}-increment`}>test button</button>
+
     </div>
+    
 )
 
 class App extends React.Component {
