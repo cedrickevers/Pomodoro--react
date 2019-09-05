@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom'
 const moment = require("moment")
 var handle = require('handle');
+import "./index.css";
+
 
 const Header = () => <h1>Pomodoro Clock</h1>
 
@@ -101,29 +103,32 @@ class App extends React.Component {
     render() {
         return (
             <div>
-                <Header />
-                <div className='settings'>
-                    <SetTimer
-                        type='break'
-                        label='Break Length'
-                        value={this.state.breakValue}
-                        app={this}
-                    />
-                    <SetTimer
-                        type='session'
-                        label='Session Length'
-                        value={this.state.sessionValue}
-                        app={this}
-                    />
-                </div>
-                <Timer mode={this.state.mode} time={moment(this.state.time).format('mm:ss')} />
-                <Controls active={this.state.active} handleReset={this.handleReset} handlePlayPause={this.handlePlayPause} app={this} />
-                <audio
-                    id='beep'
-                    src='https://s3-us-west-1.amazonaws.com/benjaminadk/Data+synth+beep+high+and+sweet.mp3'
-                    ref={ref => this.audio = ref}>
-                </audio>
+                <main>
+                    <Header />
+                    <div className='settings'>
+                        <SetTimer
+                            type='break'
+                            label='Break Length'
+                            value={this.state.breakValue}
+                            app={this}
+                        />
+                        <SetTimer
+                            type='session'
+                            label='Session Length'
+                            value={this.state.sessionValue}
+                            app={this}
+                        />
+                    </div>
+                    <Timer mode={this.state.mode} time={moment(this.state.time).format('mm:ss')} />
+                    <Controls active={this.state.active} handleReset={this.handleReset} handlePlayPause={this.handlePlayPause} app={this} />
+                    <audio
+                        id='beep'
+                        src=' '
+                        ref={ref => this.audio = ref}>
+                    </audio>
+                </main>
             </div>
+
         );
     }
 }
@@ -131,7 +136,7 @@ class App extends React.Component {
 ReactDOM.render(<App />, document.getElementById("test"));
 
 /*
-A demander
+Notes
 
 Y a t-il moyen d'avoir acces au contenu de la class App depuis les constantes en haut
 Le this était indéfini du coup comme workaround j passe le "this" a l'attribut "app" des constantes
