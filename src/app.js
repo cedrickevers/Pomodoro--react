@@ -1,9 +1,26 @@
-import React, { useState, useEffect } from 'react';
-import ReactDOM from 'react-dom'
+
+import React, { useState, useEffect, Component } from 'react';
+
+import ReactDOM from 'react-dom';
+
 const moment = require("moment")
-var handle = require('handle');
+import Modal from 'react-modal';
+
+ 
 import "./index.css";
 
+
+const customStyles = {
+    content : {
+      top                   : '50%',
+      left                  : '50%',
+      right                 : 'auto',
+      bottom                : 'auto',
+      marginRight           : '-50%',
+      transform             : 'translate(-50%, -50%)'
+    }
+  };
+  
 
 const Header = () => <h1>Pomodoro Clock</h1>
 
@@ -32,6 +49,7 @@ const Controls = ({ active, handleReset, handlePlayPause, app }) => (
     </div>
 )
 
+Modal.setAppElement('#test')
 class App extends React.Component {
     constructor(props) {
         super(props)
@@ -40,20 +58,37 @@ class App extends React.Component {
             sessionValue: 25,
             time: 25 * 60 * 1000,
             active: false,
-            mode: 'session'
+            mode: 'session',
+            modalIsOpen: false
         }
-    }
+        
+    this.openModal = this.openModal.bind(this);
+    this.afterOpenModal = this.afterOpenModal.bind(this);
+    this.closeModal = this.closeModal.bind(this);
+  }
+
+  openModal() {
+    this.setState({modalIsOpen: true});
+  }
+
+  afterOpenModal() {
+    // references are now sync'd and can be accessed.
+    this.subtitle.style.color = '#f00';
+  }
+
+  closeModal() {
+    this.setState({modalIsOpen: false});
+  }
 
     componentDidUpdate(prevProps) {
         if (this.state.time === 0 && this.state.mode === 'session') {
-            this.setState({ time: this.state.breakValue * 60 * 1000, mode: 'break' })
-            this.audio.play()
-
-
+            this.handleReset()
+            this.openModal()
+            //this.audio.play()
         }
         if (this.state.time === 0 && this.state.mode === 'break') {
             this.setState({ time: this.state.sessionValue * 60 * 1000, mode: 'session' })
-            this.audio.play()
+            //this.audio.play()
 
 
         }
@@ -65,14 +100,14 @@ class App extends React.Component {
         this.setState({ [type]: this.state[type] + (inc ? 1 : -1) })
     }
 
-    handlePlayPause() {
+    handlePlayPause(timeValue=this.state.sessionValue) {
         if (this.state.active) {
             this.setState({ active: false }, () => clearInterval(this.pomodoro))
         }
         else {
             if (!this.state.touched) {
                 this.setState({
-                    time: this.state.sessionValue * 60 * 1000,
+                    time: timeValue * 60 * 1000,
                     active: true,
                     touched: true
                 }, () => this.pomodoro = setInterval(() => this.setState({ time: this.state.time - 1000 }), 1000)
@@ -100,9 +135,34 @@ class App extends React.Component {
         clearInterval(this.pomodoro)
     }
 
+    enableBreak(){
+        this.closeModal()
+        this.setState({ time: this.state.breakValue * 60 * 1000, mode: 'break' })
+        this.handlePlayPause(this.state.breakValue)
+    }
+
     render() {
         return (
             <div>
+                 <div>
+        <Modal
+          isOpen={this.state.modalIsOpen}
+          onAfterOpen={this.afterOpenModal}
+          onRequestClose={this.closeModal}
+          style={customStyles}
+          contentLabel="Break Modal"
+        >
+
+          <h2 ref={subtitle => this.subtitle = subtitle}>Want a break ?</h2>
+          <div></div>
+          <form>
+            <button onClick={() => this.enableBreak()}>Yes</button>
+            <button onClick={() => this.closeModal()}>No</button>
+          </form>
+        </Modal>
+      </div>
+    );
+  }
                 <main>
                     <Header />
                     <div className='settings'>
@@ -134,11 +194,4 @@ class App extends React.Component {
 }
 
 ReactDOM.render(<App />, document.getElementById("test"));
-
-/*
-Notes
-
-Y a t-il moyen d'avoir acces au contenu de la class App depuis les constantes en haut
-Le this était indéfini du coup comme workaround j passe le "this" a l'attribut "app" des constantes
-De cette façon on peut avoir accès au contenu de la class App
-*/
+ 
