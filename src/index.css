@@ -1,1 +1,88 @@
 
+* {
+    box-sizing: border-box;
+}
+
+body {
+    /* background-image: url("background.jpeg"); */
+    /* The image used */
+    background-color: #cccccc;
+    /* Used if the image is unavailable */
+    height: 500px;
+    /* You must set a specified height */
+    background-position: center;
+    /* Center the image */
+    background-repeat: no-repeat;
+    /* Do not repeat the image */
+    background-size: cover;
+    /* Resize the background image to cover the entire container */
+}
+
+main {
+
+
+    width: 500px;
+    height: 500px;
+    border-radius: 50%;
+    margin: 0 auto;
+    background: tomato;
+    box-shadow: 0 0 0 0 rgba(90, 153, 212, 0.5);
+    animation: pulse 10.5s infinite;
+}
+
+ion-header button[ion-button].bar-buttons:hover {
+    animation: none;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(0.9);
+    }
+
+    70% {
+        transform: scale(1);
+        box-shadow: 0 1 0 10px rgba(90, 153, 212, 0);
+    }
+
+    100% {
+        transform: scale(0.9);
+        box-shadow: 0 0 0 0 rgba(90, 153, 212, 0);
+    }
+
+}
+
+
+.settings,
+.SetTimer,
+.SetTimer-controls,
+.Timer,
+.Controls {
+    display: flex;
+}
+
+
+
+.settings {
+    justify-content: space-evenly;
+
+}
+
+.SetTimer {
+    flex-direction: column;
+    align-items: center;
+}
+
+.SetTimer-controls {
+    justify-content: center;
+    align-items: center;
+    height: 5rem;
+}
+
+.Timer {
+    flex-direction: column;
+    align-items: center;
+}
+
+.Controls {
+    justify-content: center;
+}
