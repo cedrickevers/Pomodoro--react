@@ -5,6 +5,9 @@
   "repository": "git@github.com:cedrickevers/Pomodoro--react.git",
   "author": "ck <keverscedric@gmail.com>",
   "license": "MIT",
+    "scripts": {
+    "build": "parcel src/index.html"
+  },
   "dependencies": {
     "handle": "^1.0.0",
     "modal": "^1.2.0",
