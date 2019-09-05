@@ -3,18 +3,17 @@ import ReactDOM from 'react-dom'
 const moment = require("moment")
 var handle = require('handle');
 
-
 const Header = () => <h1>Pomodoro Clock</h1>
 
-const SetTimer = ({ type, label, value, handleClick }) => (
-    <div className='SetTimer'>
+const SetTimer = ({ type, label, value, app }) => (
+    < div className='SetTimer' >
         <div id={`${type}-label`}>{label}</div>
         <div className='SetTimer-controls'>
-            <button id={`${type}-decrement`} onClick={() => handleClick(false, `${type}Value`)}>&darr;</button>
+            <button id={`${type}-decrement`} onClick={() => app.handleSetTimers(false, `${type}Value`)}>&darr;</button>
             <h1 id={`${type}-length`}>{value}</h1>
-            <button id={`${type}-increment`} onClick={() => handleClick(true, `${type}Value`)}>&uarr;</button>
+            <button id={`${type}-increment`} onClick={() => app.handleSetTimers(true, `${type}Value`)}>&uarr;</button>
         </div>
-    </div>
+    </div >
 )
 
 const Timer = ({ mode, time }) => (
@@ -24,13 +23,12 @@ const Timer = ({ mode, time }) => (
     </div>
 )
 
-const Controls = ({ active, handleReset, handlePlayPause }) => (
+const Controls = ({ active, handleReset, handlePlayPause, app }) => (
     <div className='Controls'>
-        <button id='start_stop' onClick={handlePlayPause}>{active ? <span>&#10074;&#10074;</span> : <span>&#9658;</span>}</button>
-        <button id='reset' onClick={handleReset}>&#8635;</button>
+        <button id='start_stop' onClick={() => app.handlePlayPause()}>{active ? <span>&#10074;&#10074;</span> : <span>&#9658;</span>}</button>
+        <button id='reset' onClick={() => app.handleReset()}>&#8635;</button>
     </div>
 )
-
 
 class App extends React.Component {
     constructor(props) {
@@ -39,16 +37,67 @@ class App extends React.Component {
             breakValue: 5,
             sessionValue: 25,
             time: 25 * 60 * 1000,
-            mode: 'session',
-            active: false
+            active: false,
+            mode: 'session'
         }
     }
 
-    handleSetTimers = (inc, type) => {
+    componentDidUpdate(prevProps) {
+        if (this.state.time === 0 && this.state.mode === 'session') {
+            this.setState({ time: this.state.breakValue * 60 * 1000, mode: 'break' })
+            this.audio.play()
+
+
+        }
+        if (this.state.time === 0 && this.state.mode === 'break') {
+            this.setState({ time: this.state.sessionValue * 60 * 1000, mode: 'session' })
+            this.audio.play()
+
+
+        }
+    }
+
+    handleSetTimers(inc, type) {
         if (inc && this.state[type] === 60) return
         if (!inc && this.state[type] === 1) return
         this.setState({ [type]: this.state[type] + (inc ? 1 : -1) })
     }
+
+    handlePlayPause() {
+        if (this.state.active) {
+            this.setState({ active: false }, () => clearInterval(this.pomodoro))
+        }
+        else {
+            if (!this.state.touched) {
+                this.setState({
+                    time: this.state.sessionValue * 60 * 1000,
+                    active: true,
+                    touched: true
+                }, () => this.pomodoro = setInterval(() => this.setState({ time: this.state.time - 1000 }), 1000)
+                )
+            } else {
+                this.setState({
+                    active: true,
+                    touched: true
+                }, () => this.pomodoro = setInterval(() => this.setState({ time: this.state.time - 1000 }), 1000))
+            }
+        }
+    }
+
+    handleReset() {
+        this.setState({
+            breakValue: 5,
+            sessionValue: 25,
+            time: 25 * 60 * 1000,
+            active: false,
+            mode: 'session',
+            touched: false
+        })
+        this.audio.pause()
+        this.audio.currentTime = 0
+        clearInterval(this.pomodoro)
+    }
+
     render() {
         return (
             <div>
@@ -58,19 +107,33 @@ class App extends React.Component {
                         type='break'
                         label='Break Length'
                         value={this.state.breakValue}
+                        app={this}
                     />
                     <SetTimer
                         type='session'
                         label='Session Length'
                         value={this.state.sessionValue}
+                        app={this}
                     />
                 </div>
                 <Timer mode={this.state.mode} time={moment(this.state.time).format('mm:ss')} />
-                <Controls active={this.state.active} />
-
+                <Controls active={this.state.active} handleReset={this.handleReset} handlePlayPause={this.handlePlayPause} app={this} />
+                <audio
+                    id='beep'
+                    src='https://s3-us-west-1.amazonaws.com/benjaminadk/Data+synth+beep+high+and+sweet.mp3'
+                    ref={ref => this.audio = ref}>
+                </audio>
             </div>
         );
     }
 }
 
 ReactDOM.render(<App />, document.getElementById("test"));
+
+/*
+A demander
+
+Y a t-il moyen d'avoir acces au contenu de la class App depuis les constantes en haut
+Le this était indéfini du coup comme workaround j passe le "this" a l'attribut "app" des constantes
+De cette façon on peut avoir accès au contenu de la class App
+*/
