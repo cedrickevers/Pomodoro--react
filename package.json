@@ -6,10 +6,11 @@
   "author": "ck <keverscedric@gmail.com>",
   "license": "MIT",
     "scripts": {
-    "build": "npm install && parcel src/index.html"
+    "build": " parcel src/index.html"
   },
   "dependencies": {
     "handle": "^1.0.0",
+    "parcel-bundler": "^1.12.3",
     "modal": "^1.2.0",
     "moment": "^2.24.0",
     "react": "^16.9.0",
