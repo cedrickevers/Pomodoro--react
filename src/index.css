@@ -1,100 +1,182 @@
-* {
-    box-sizing: border-box;
-}
+import React from "react";
+import ReactDOM from "react-dom";
+const moment = require("moment");
+import Modal from "react-modal"; 
+import "./index.css";
 
-body {
-    background: blueviolet;
-}
+const customStyles = {
+    content : {
+      top                   : "50%",
+      left                  : "50%",
+      right                 : "auto",
+      bottom                : "auto",
+      marginRight           : "-50%",
+      transform             : 'translate(-50%, -50%)'
+    }
+  };
+  
 
+const Header = () => <h1>Pomodoro Clock</h1>
 
+const SetTimer = ({ type, label, value, app }) => (
+    < div className="SetTimer" >
+        <div id={`${type}-label`}>{label}</div>
+        <div className="SetTimer-controls">
+            <button id={`${type}-decrement`} onClick={() => app.handleSetTimers(false, `${type}Value`)}>&darr;</button>
+            <h1 id={`${type}-length`}>{value}</h1>
+            <button id={`${type}-increment`} onClick={() => app.handleSetTimers(true, `${type}Value`)}>&uarr;</button>
+        </div>
+    </div >
+);
 
-main {
+const Timer = ({ mode, time }) => (
+    <div className="Timer">
+        <h1 id='timer-label'>{mode === "session" ? "Session " : "Break "}</h1>
+        <h1 id="time-left">{time}</h1>
+    </div>
+)
 
-    width: 500px;
-    height: 500px;
-    border-radius: 50%;
-    margin: 0 auto;
-    background: tomato;
-    box-shadow: 0 0 0 0 rgba(90, 153, 212, 0.5);
-    animation: pulse 10.5s infinite;
+const Controls = ({ active,   handlePlayPause, app }) => (
+    <div className="Controls">
+        <button id="start_stop" onClick={() => app.handlePlayPause()}>{active ? <span>&#10074;&#10074;</span> : <span>&#9658;</span>}</button>
+        <button id="reset" onClick={() => app.handleReset()}>&#8635;</button>
+    </div>
+)
 
-}
+Modal.setAppElement("#test")
+class App extends React.Component {
+    constructor(props) {
+        super(props)
+        this.state = {
+            breakValue: 5,
+            sessionValue: 25,
+            time: 25 * 60 * 1000,
+            active: false,
+            mode: "session",
+            modalIsOpen: false
+        }
+        
+    this.openModal = this.openModal.bind(this);
+    this.afterOpenModal = this.afterOpenModal.bind(this);
+    this.closeModal = this.closeModal.bind(this);
+  }
 
-ion-header button[ion-button].bar-buttons:hover {
-    animation: none;
-}
+  openModal() {
+    this.setState({modalIsOpen: true});
+  }
 
-@keyframes pulse {
-    0% {
-        transform: scale(0.9);
+  afterOpenModal() {
+    // references are now sync'd and can be accessed.
+    this.subtitle.style.color = "#f00";
+  }
+
+  closeModal() {
+    this.setState({modalIsOpen: false});
+  }
+
+    componentDidUpdate(prevProps) {
+        if (this.state.time === 0 && this.state.mode === "session") {
+            this.handleReset()
+            this.openModal()
+            
+        }
+        if (this.state.time === 0 && this.state.mode === "break") {
+           this.setState({ time: this.state.sessionValue * 60 * 1000, mode: "session" })
+     
+        }
     }
 
-    70% {
-        transform: scale(1);
-        box-shadow: 0 1 0 10px rgba(90, 153, 212, 0);
+    handleSetTimers(inc, type) {
+        if (inc && this.state[type] === 60) return
+        if (!inc && this.state[type] === 1) return
+        this.setState({ [type]: this.state[type] + (inc ? 1 : -1) })
     }
 
-    100% {
-        transform: scale(0.9);
-        box-shadow: 0 0 0 0 rgba(90, 153, 212, 0);
+    handlePlayPause(timeValue=this.state.sessionValue) {
+        if (this.state.active) {
+            this.setState({ active: false }, () => clearInterval(this.pomodoro))
+        }
+        else {
+            if (!this.state.touched) {
+                this.setState({
+                    time: timeValue * 60 * 1000,
+                    active: true,
+                    touched: true
+                }, () => this.pomodoro = setInterval(() => this.setState({ time: this.state.time - 1000 }), 1000)
+                )
+            } else {
+                this.setState({
+                    active: true,
+                    touched: true
+                }, () => this.pomodoro = setInterval(() => this.setState({ time: this.state.time - 1000 }), 1000))
+            }
+        }
     }
 
+    handleReset() {
+        this.setState({
+            breakValue: 5,
+            sessionValue: 25,
+            time: 25 * 60 * 1000,
+            active: false,
+            mode: "session",
+            touched: false
+        })
+ 
+        clearInterval(this.pomodoro)
+    }
+
+    enableBreak(){
+        this.closeModal()
+        this.setState({ time: this.state.breakValue * 60 * 1000, mode: "break" })
+        this.handlePlayPause(this.state.breakValue)
+    }
+
+    render() {
+        return (
+            <div>
+                 <div>
+        <Modal
+          isOpen={this.state.modalIsOpen}
+          onAfterOpen={this.afterOpenModal}
+          onRequestClose={this.closeModal}
+          style={customStyles}
+          contentLabel="Break Modal"
+        >
+
+          <h2 ref={subtitle => this.subtitle = subtitle}>Want a break ?</h2>
+          <div></div>
+          <form>
+            <button onClick={() => this.enableBreak()}>Yes</button>
+            <button onClick={() => this.closeModal()}>No</button>
+          </form>
+        </Modal>
+      </div>
+    );
+  }
+                <main>
+                    <Header />
+                    <div className="settings">
+                        <SetTimer
+                            type="break"
+                            label="Break Length"
+                            value={this.state.breakValue}
+                            app={this}
+                        />
+                        <SetTimer
+                            type="session"
+                            label="Session Length"
+                            value={this.state.sessionValue}
+                            app={this}
+                        />
+                    </div>
+                    <Timer mode={this.state.mode} time={moment(this.state.time).format("mm:ss")} />
+                    <Controls active={this.state.active} handleReset={this.handleReset} handlePlayPause={this.handlePlayPause} app={this} />
+                   
+                </main>
+            </div>
+
+        );
+    }
 }
-
-
-.settings,
-.SetTimer,
-.SetTimer-controls,
-.Timer,
-.Controls {
-    display: flex;
-}
-
-
-
-.settings {
-    justify-content: space-evenly;
-
-
-}
-
-.SetTimer {
-    flex-direction: column;
-    align-items: center;
-    background: 5px solid black;
-
-}
-
-.SetTimer-controls {
-    justify-content: center;
-    align-items: center;
-    background: 5px solid black;
-
-
-}
-
-.Timer {
-    flex-direction: column;
-    align-items: center;
-}
-
-.Controls {
-    margin: 0 auto;
-    justify-content: center;
-    background: rgb(206, 86, 16);
-    width: 200px;
-
-    border-bottom: 52px solid rgb(236, 18, 18);
-    border-left: 2px solid black;
-    border-right: 2px solid black;
-    border-radius: 0 0 80px 500px;
-}
-
-.Timer {
-    color: rgb(0, 200, 236);
-    background: tomato;
-    border: 5px solid black;
-    width: 50%;
-    border-radius: 50%;
-    margin-left: 8rem;
-}
+ReactDOM.render(<App />, document.querySelector("#test")); 
